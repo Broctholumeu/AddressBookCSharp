@@ -60,7 +60,7 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,Category")] Contact contact, IFormFile NewPicture)
+        public async Task<IActionResult> Create([Bind("Id,CategoryId,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,Category")] Contact contact, IFormFile NewPicture)
         {
             if (ModelState.IsValid)
             {
@@ -71,7 +71,7 @@ namespace AddressBook.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", contact.CategoryId);
             return View(contact);
         }
 
@@ -88,7 +88,7 @@ namespace AddressBook.Controllers
             {
                 return NotFound();
             }
-            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name", contact.CategoryId);
             return View(contact);
         }
 
