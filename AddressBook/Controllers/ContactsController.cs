@@ -7,22 +7,26 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AddressBook.Data;
 using AddressBook.Models;
+using AddressBook.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace AddressBook.Controllers
 {
     public class ContactsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IImageService _imageService;
 
-        public ContactsController(ApplicationDbContext context)
+        public ContactsController(ApplicationDbContext context, IImageService imageService)
         {
             _context = context;
+            _imageService = imageService;
         }
 
         // GET: Contacts
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Contact.ToListAsync());
+            return View(await _context.Contact.Include(c => c.Category).ToListAsync());
         }
 
         // GET: Contacts/Details/5
@@ -34,18 +38,20 @@ namespace AddressBook.Controllers
             }
 
             var contact = await _context.Contact
+                .Include(c => c.Category)
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (contact == null)
             {
                 return NotFound();
             }
-
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View(contact);
         }
 
         // GET: Contacts/Create
         public IActionResult Create()
         {
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View();
         }
 
@@ -54,14 +60,18 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CategoryId,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,ContentType,Category")] Contact contact)
+        public async Task<IActionResult> Create([Bind("Id,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,Category")] Contact contact, IFormFile NewPicture)
         {
             if (ModelState.IsValid)
             {
+                contact.ContentType = _imageService.RecordContentType(NewPicture);
+                contact.Picture = await _imageService.EncodePosterAsync(NewPicture);
+
                 _context.Add(contact);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View(contact);
         }
 
@@ -78,6 +88,7 @@ namespace AddressBook.Controllers
             {
                 return NotFound();
             }
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View(contact);
         }
 
@@ -86,7 +97,7 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryId,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,ContentType,Category")] Contact contact)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryId,NameId,FirstName,LastName,StreetAddress,City,State,ZipCode,HomePhone,CellPhone,FaxNumber,Email,Picture,ContentType,Category")] Contact contact, IFormFile NewPicture)
         {
             if (id != contact.Id)
             {
@@ -97,6 +108,11 @@ namespace AddressBook.Controllers
             {
                 try
                 {
+                    if (NewPicture is not null)
+                    {
+                        contact.ContentType = _imageService.RecordContentType(NewPicture);
+                        contact.Picture = await _imageService.EncodePosterAsync(NewPicture);
+                    }
                     _context.Update(contact);
                     await _context.SaveChangesAsync();
                 }
@@ -113,6 +129,7 @@ namespace AddressBook.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["CategoryId"] = new SelectList(_context.Category, "Id", "Name");
             return View(contact);
         }
 

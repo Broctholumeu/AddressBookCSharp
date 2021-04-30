@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using AddressBook.Data;
 using AddressBook.Models;
+using AddressBook.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace AddressBook.Controllers
 {
@@ -14,9 +16,16 @@ namespace AddressBook.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public CategoriesController(ApplicationDbContext context)
+        //Injecting Services
+        //Injection 1
+        private readonly IImageService _imageService;
+
+        //Injection 2
+        public CategoriesController(ApplicationDbContext context, IImageService imageService)
         {
             _context = context;
+            //Injection 3
+            _imageService = imageService;
         }
 
         // GET: Categories
@@ -54,10 +63,14 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,CategoryId,Name,CategoryPicture,CategoryContentType")] Category category)
+        public async Task<IActionResult> Create([Bind("Id,CategoryId,Name,CategoryPicture,CategoryContentType")] Category category, IFormFile NewCategoryPic)
         {
             if (ModelState.IsValid)
             {
+                //Injection to Create
+                category.CategoryContentType = _imageService.RecordContentType(NewCategoryPic);
+                category.CategoryPicture = await _imageService.EncodePosterAsync(NewCategoryPic);
+               
                 _context.Add(category);
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
@@ -86,7 +99,7 @@ namespace AddressBook.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryId,Name,CategoryPicture,CategoryContentType")] Category category)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,CategoryId,Name,CategoryPicture,CategoryContentType")] Category category, IFormFile NewCategoryPicture)
         {
             if (id != category.Id)
             {
@@ -97,6 +110,11 @@ namespace AddressBook.Controllers
             {
                 try
                 {
+                    if (NewCategoryPicture is not null)
+                    {
+                        category.CategoryContentType = _imageService.RecordContentType(NewCategoryPicture);
+                        category.CategoryPicture = await _imageService.EncodePosterAsync(NewCategoryPicture);
+                    }
                     _context.Update(category);
                     await _context.SaveChangesAsync();
                 }

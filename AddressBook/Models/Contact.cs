@@ -28,6 +28,7 @@ namespace AddressBook.Models
         [Display(Name ="Contact Pic")]
         public byte[] Picture { get; set; }
         public string ContentType { get; set; }
-        public int Category { get; set; }
+        
+        public Category Category { get; set; }
     }
 }

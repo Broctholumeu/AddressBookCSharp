@@ -10,11 +10,11 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Create">
+        <form asp-action="Create" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
                 <label asp-for="CategoryId" class="control-label"></label>
-                <input asp-for="CategoryId" class="form-control" />
+                <select asp-for="CategoryId" class="form-control"></select>
                 <span asp-validation-for="CategoryId" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -24,7 +24,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="CategoryPicture" class="control-label"></label>
-                <input asp-for="CategoryPicture" class="form-control" />
+                <input name="NewCategoryPic" type="file" asp-for="CategoryPicture" class="form-control-file" />
                 <span asp-validation-for="CategoryPicture" class="text-danger"></span>
             </div>
             <div class="form-group">

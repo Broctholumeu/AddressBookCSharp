@@ -20,7 +20,7 @@ namespace AddressBook.Models
 
         //Defining a FOREIGN KEY
         public ICollection<Contact> Contact { get; set; } = new HashSet<Contact>();
-
+        
 
     }
 }
